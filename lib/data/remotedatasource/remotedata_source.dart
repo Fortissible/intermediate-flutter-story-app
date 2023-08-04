@@ -26,7 +26,6 @@ abstract class RemoteDataSource{
 
 class RemoteDataSourceImpl implements RemoteDataSource{
 
-
   final Dio dio;
   static const baseUrl = "https://story-api.dicoding.dev/v1";
   static const endpointRegister = "/register";
@@ -155,9 +154,15 @@ class RemoteDataSourceImpl implements RemoteDataSource{
         );
       }
     } on DioException catch (e){
-      throw ConnectionException(
-          msg: "Problem :${e.message}"
-      );
+      if (e.response != null) {
+        throw ServerException(
+            msg: e.response!.data["message"]
+        );
+      } else {
+        throw const ConnectionException(
+            msg: "Internet Connection Problem!"
+        );
+      }
     }
   }
 
@@ -166,11 +171,11 @@ class RemoteDataSourceImpl implements RemoteDataSource{
       String token,
       String desc,
       List<int> bytes,
-      String fileName,) async {
+      String fileName,
+      ) async {
     try {
-
       var formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(bytes, filename: fileName),
+        'photo': MultipartFile.fromBytes(bytes, filename: fileName),
         'description' : desc
       });
 
@@ -184,8 +189,7 @@ class RemoteDataSourceImpl implements RemoteDataSource{
           ),
           data: formData
       );
-
-      if (postStoryResponse.statusCode == 200){
+      if (postStoryResponse.statusCode == 201){
         return ServerResponse.fromJson(postStoryResponse.data).message;
       } else {
         throw const ServerException(
@@ -193,9 +197,15 @@ class RemoteDataSourceImpl implements RemoteDataSource{
         );
       }
     } on DioException catch (e){
-      throw ConnectionException(
-          msg: "Problem :${e.message}"
-      );
+      if (e.response != null) {
+        throw ServerException(
+            msg: e.response!.data["message"]
+        );
+      } else {
+        throw const ConnectionException(
+            msg: "Internet Connection Problem!"
+        );
+      }
     }
   }
 }

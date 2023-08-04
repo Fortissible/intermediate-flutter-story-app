@@ -72,6 +72,7 @@ class MyRouterDelegate extends RouterDelegate with
                 isUploadStorySelected = !value;
                 notifyListeners();
               },
+              userLoginEntity: UserSharedPreferences.getUserPrefs(),
             )
           ),
         if (isLoggedIn && isProfileSelected)
@@ -85,6 +86,7 @@ class MyRouterDelegate extends RouterDelegate with
                 isLoggedIn = !value;
                 notifyListeners();
               },
+              username: UserSharedPreferences.getUserPrefs().name,
             )
           ),
         if (isRegisteredSelected)
@@ -97,8 +99,11 @@ class MyRouterDelegate extends RouterDelegate with
             ),
           ),
         if (selectedStory != null)
-          const MaterialPage(
-              child: DetailPage()
+          MaterialPage(
+              child: DetailPage(
+                storyId: selectedStory ?? "",
+                token: UserSharedPreferences.getUserPrefs().token,
+              )
           )
       ],
       onPopPage: (route, result){
@@ -108,7 +113,6 @@ class MyRouterDelegate extends RouterDelegate with
           return false;
         }
 
-        isLoggedIn = false;
         isRegisteredSelected = false;
         selectedStory = null;
         isUploadStorySelected = false;

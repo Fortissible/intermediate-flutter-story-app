@@ -4,8 +4,8 @@ class StoryDetailEntity {
   String description;
   String photoUrl;
   DateTime createdAt;
-  double lat;
-  double lon;
+  double? lat;
+  double? lon;
 
   StoryDetailEntity({
     required this.id,
@@ -13,7 +13,7 @@ class StoryDetailEntity {
     required this.description,
     required this.photoUrl,
     required this.createdAt,
-    required this.lat,
-    required this.lon,
+    this.lat,
+    this.lon,
   });
 }

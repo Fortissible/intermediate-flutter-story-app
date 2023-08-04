@@ -1,14 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:intermediate_flutter_story_app/core/sharedpreferences/user_shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget{
   final Function(bool) isBackToFeedsPage;
   final Function(bool) loggingOut;
+  final String? username;
   const ProfilePage({
     super.key,
     required this.isBackToFeedsPage,
-    required this.loggingOut
+    required this.loggingOut,
+    required this.username
   });
 
   @override
@@ -21,7 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text("Profile"),
+          title: Text("${widget.username} Profile"),
           leading: Padding(
             padding: const EdgeInsets.only(
                 left: 12
@@ -54,6 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Center(
               child: ElevatedButton(
                 onPressed: () {
+                  UserSharedPreferences.logoutPrefs();
                   widget.loggingOut(true);
                 },
                 child: const Text("Logout"),

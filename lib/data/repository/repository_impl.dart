@@ -67,9 +67,9 @@ class RepositoryImpl extends Repository{
       );
       return Right(storyResponse);
     } on ServerException catch(e){
-      return Left(ServerFailure("Login invalid!\nError Info: ${e.toString()}"));
+      return Left(ServerFailure("Upload failed!\nError Info: ${e.msg}"));
     } on ConnectionException catch(e){
-      return Left(ConnectionFailure("Internet Problem!\nError Info: ${e.toString()}"));
+      return Left(ConnectionFailure(e.msg));
     }
   }
 

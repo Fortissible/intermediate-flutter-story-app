@@ -96,7 +96,7 @@ class _FeedsPageState extends State<FeedsPage> {
       ),
       body: Consumer<StoryProvider>(
         builder: (ctx, provider, _){
-          if (provider.state == ResultState.loading){
+          if (provider.listStoryState == ListStoryState.loading){
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -113,7 +113,7 @@ class _FeedsPageState extends State<FeedsPage> {
                 ],
               ),
             );
-          } else if (provider.state == ResultState.hasData) {
+          } else if (provider.listStoryState == ListStoryState.hasData) {
             return RefreshIndicator(
                 onRefresh: () async {
                   _fetchListStory();
@@ -139,7 +139,7 @@ class _FeedsPageState extends State<FeedsPage> {
                     }
                 )
             );
-          } else if (provider.state == ResultState.noData) {
+          } else if (provider.listStoryState == ListStoryState.noData) {
             return const Center(
               child: Text(
                 "There are no data to be displayed...",
@@ -147,7 +147,7 @@ class _FeedsPageState extends State<FeedsPage> {
                 style: TextStyle(color: Colors.deepOrangeAccent),
               ),
             );
-          } else if (provider.state == ResultState.error) {
+          } else if (provider.listStoryState == ListStoryState.error) {
             return Center(
               child: Text(
                 provider.errorMsg ?? "Error...",
@@ -166,17 +166,11 @@ class _FeedsPageState extends State<FeedsPage> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: (){
-            print(widget.userLoginEntity.token);
-          },
-          child: Icon(Icons.add),
-      ),
     );
   }
 
   void _fetchListStory(){
-    final authProvider = context.read<StoryProvider>();
-    authProvider.getListStory(widget.userLoginEntity.token);
+    final storyProvider = context.read<StoryProvider>();
+    storyProvider.getListStory(widget.userLoginEntity.token);
   }
 }
