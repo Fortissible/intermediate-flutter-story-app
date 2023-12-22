@@ -1,11 +1,16 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/story_provider.dart';
 
 class CameraPage extends StatefulWidget {
   final List<CameraDescription> cameras;
+  final Function() backToUploadPage;
   const CameraPage({
     super.key,
-    required this.cameras
+    required this.cameras,
+    required this.backToUploadPage
   });
 
   @override
@@ -19,10 +24,9 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addObserver(this);
-    onNewCameraSelected(widget.cameras.first);
-
     super.initState();
+    onNewCameraSelected(widget.cameras.first);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -68,9 +72,13 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   }
 
   Future<void> _onCameraButtonClick() async {
-    final navigator = Navigator.of(context);
+    final provider = context.read<StoryProvider>();
     final image = await controller?.takePicture();
-    navigator.pop(image);
+    if (image != null) {
+      provider.setImageFile(image);
+      provider.setImagePath(image.path);
+    }
+    widget.backToUploadPage();
   }
 
   void onNewCameraSelected(CameraDescription cameraDescription) async {
@@ -79,7 +87,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         cameraDescription,
         ResolutionPreset.medium
     );
-
     await previousCameraController?.dispose();
     try {
       await cameraController.initialize();
@@ -96,8 +103,10 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   }
 
   void _onCameraSwitch() {
+    if (widget.cameras.length == 1) return;
+
     setState(() {
-      _isBackCameraSelected = false;
+      _isCameraInitialized = false;
     });
 
     onNewCameraSelected(
@@ -105,7 +114,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     );
 
     setState(() {
-      _isBackCameraSelected= !_isBackCameraSelected;
+      _isBackCameraSelected = !_isBackCameraSelected;
     });
   }
 

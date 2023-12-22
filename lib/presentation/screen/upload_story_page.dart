@@ -8,15 +8,15 @@ import 'package:intermediate_flutter_story_app/domain/entity/login_entity.dart';
 import 'package:intermediate_flutter_story_app/presentation/provider/story_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'camera_page.dart';
-
 class UploadStoryPage extends StatefulWidget{
-  final Function(bool) isBackToFeedsPage;
+  final Function() isBackToFeedsPage;
+  final Function() goToCameraPage;
   final LoginEntity userLoginEntity;
   const UploadStoryPage({
     super.key,
     required this.isBackToFeedsPage,
-    required this.userLoginEntity
+    required this.userLoginEntity,
+    required this.goToCameraPage
   });
 
   @override
@@ -29,8 +29,6 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
   @override
   void initState() {
     super.initState();
-    final storyProvider = context.read<StoryProvider>();
-    storyProvider.setUploadInitState();
   }
 
   @override
@@ -54,7 +52,7 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
               child: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black),
                 onPressed: () {
-                  widget.isBackToFeedsPage(true);
+                  widget.isBackToFeedsPage();
                 },
               ),
             ),
@@ -174,7 +172,7 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
                       ),
                     );
                   } else if (provider.uploadStoryState == UploadStoryState.hasData){
-                    provider.getListStory(widget.userLoginEntity.token);
+                    WidgetsBinding.instance.addPostFrameCallback((_) => _showSnackbar("Sukses upload story"));
                     return Padding(
                       padding: const EdgeInsets.only(
                           top: 8,left:32,right:32
@@ -274,7 +272,7 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
     final ScaffoldMessengerState scaffoldMessengerState =
     ScaffoldMessenger.of(context);
     scaffoldMessengerState.showSnackBar(
-      SnackBar(content: Text("Failed to upload story\n$msg!")),
+      SnackBar(content: Text(msg ?? "Error uploading story")),
     );
   }
 
@@ -317,21 +315,10 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
   }
 
   _onCustomCameraView() async {
-    final provider = context.read<StoryProvider>();
-    final navigator = Navigator.of(context);
     final cameras = await availableCameras();
-    final XFile? resultImageFile = await navigator.push(
-        MaterialPageRoute(
-            builder: (context) => CameraPage(
-                cameras : cameras
-            )
-        )
-    );
-
-    if (resultImageFile != null) {
-      provider.setImageFile(resultImageFile);
-      provider.setImagePath(resultImageFile.path);
-    }
+    final provider = context.read<StoryProvider>();
+    provider.setListCameraDescription(cameras);
+    widget.goToCameraPage();
   }
 
   Widget _showImage() {

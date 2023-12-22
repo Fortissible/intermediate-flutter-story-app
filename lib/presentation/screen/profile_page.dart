@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intermediate_flutter_story_app/core/sharedpreferences/user_shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget{
-  final Function(bool) isBackToFeedsPage;
-  final Function(bool) loggingOut;
+  final Function() isBackToFeedsPage;
+  final Function() loggingOut;
   final String? username;
   const ProfilePage({
     super.key,
@@ -40,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black),
                 onPressed: () {
-                  widget.isBackToFeedsPage(true);
+                  widget.isBackToFeedsPage();
                 },
               ),
             ),
@@ -57,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: ElevatedButton(
                 onPressed: () {
                   UserSharedPreferences.logoutPrefs();
-                  widget.loggingOut(true);
+                  widget.loggingOut();
                 },
                 child: const Text("Logout"),
               ),

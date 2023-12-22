@@ -4,7 +4,7 @@ import 'package:intermediate_flutter_story_app/presentation/provider/auth_provid
 import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget{
-  final Function(bool) isSuccessfulyRegistered;
+  final Function() isSuccessfulyRegistered;
   const RegisterPage({
     Key? key,
     required this.isSuccessfulyRegistered
@@ -126,6 +126,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     _password = inputPassword;
                   });
                 },
+                obscureText: true,
               ),
             ),
             context.watch<AuthProvider>().registerLoading ?
@@ -214,7 +215,7 @@ class _RegisterPageState extends State<RegisterPage> {
       scaffoldMessengerState.showSnackBar(
         SnackBar(content: Text(authProvider.responseMsg ?? "Register Success")),
       ),
-      widget.isSuccessfulyRegistered(true)
+      widget.isSuccessfulyRegistered()
     } : scaffoldMessengerState.showSnackBar(
       SnackBar(content: Text(authProvider.errorMsg ?? "Register Failed")),
     );

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
@@ -15,8 +16,8 @@ enum UploadStoryState { init, loading, hasData, error }
 class StoryProvider extends ChangeNotifier {
   String? imagePath;
   XFile? imageFile;
-
-  List<StoryEntity>? _listStoryEntity;
+  List<CameraDescription>? _listCameraDescription;
+  List<StoryEntity> _listStoryEntity = [];
   StoryDetailEntity? _storyDetailEntity;
   String? _postResponse;
   String? _errorMsg;
@@ -31,10 +32,22 @@ class StoryProvider extends ChangeNotifier {
   UploadStoryState get uploadStoryState => _uploadStoryState;
   StoryDetailState get storyDetailState => _storyDetailState;
   ListStoryState get listStoryState => _listStoryState;
+  List<CameraDescription>? get listCameraDescription => _listCameraDescription;
+
+  int? page = 1;
+  int sizeItems = 10;
 
   final Repository repository;
 
   StoryProvider({required this.repository});
+
+  void setListCameraDescription(List<CameraDescription> cameras){
+    _listCameraDescription = cameras;
+  }
+
+  void setPostStoryInitState(){
+    _uploadStoryState = UploadStoryState.init;
+  }
 
   void setImagePath(String? value) {
     imagePath = value;
@@ -46,26 +59,48 @@ class StoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void getListStory(String token) async {
-    _listStoryState = ListStoryState.loading;
-    notifyListeners();
+  Future<void> refreshListStory(String token) async {
+    _listStoryEntity = [];
+    page = 1;
+    _errorMsg = null;
+    await getListStory(token);
+  }
+
+  Future getListStory(String token) async {
+    if (page == 1){
+      _listStoryState = ListStoryState.loading;
+    }
 
     _errorMsg = null;
-    _listStoryEntity = null;
 
-    final storyListEntityFold = await repository.getStoryList(token);
+    final storyListEntityFold = await repository.getStoryList(
+        token, page.toString(), sizeItems.toString()
+    );
+
     storyListEntityFold.fold(
             (l) {
+
               _errorMsg = l.msg;
               _listStoryState = ListStoryState.error;
+
             },
             (r) {
+
               if (r.isEmpty) {
+
                 _listStoryState = ListStoryState.noData;
-                _listStoryEntity = r;
+                page = null;
+
               } else {
+
+                if (r.length < sizeItems) {
+                  page = null;
+                }
+
                 _listStoryState = ListStoryState.hasData;
-                _listStoryEntity = r;
+                _listStoryEntity.addAll(r);
+                page = page! + 1;
+
               }
             }
     );
@@ -73,9 +108,7 @@ class StoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void getStoryDetail(String token, String id) async {
-    _storyDetailState = StoryDetailState.loading;
-    notifyListeners();
+  Future getStoryDetail(String token, String id) async {
 
     _errorMsg = null;
     _storyDetailEntity = null;
@@ -143,9 +176,5 @@ class StoryProvider extends ChangeNotifier {
     } while (length > 1000000);
 
     return newByte;
-  }
-
-  Future setUploadInitState() async {
-    _uploadStoryState = UploadStoryState.init;
   }
 }

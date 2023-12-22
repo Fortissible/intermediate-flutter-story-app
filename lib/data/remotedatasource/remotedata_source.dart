@@ -12,7 +12,7 @@ import 'package:intermediate_flutter_story_app/data/remotedatasource/response/st
 import 'package:intermediate_flutter_story_app/data/remotedatasource/response/story_list_response.dart';
 
 abstract class RemoteDataSource{
-  Future<List<StoryModel>> getStoryList(String token);
+  Future<List<StoryModel>> getStoryList(String token, String page, String sizeItems);
   Future<StoryDetailModel> getStoryDetail(String id, String token);
   Future<LoginModel> login(String email, String pass);
   Future<String> register(String name, String email, String pass);
@@ -32,7 +32,7 @@ class RemoteDataSourceImpl implements RemoteDataSource{
   static const endpointLogin = "/login";
   static const endpointAccountAddStory = "/stories";
   // static const endpointGuestAddStory = "/stories/guest";
-  static const endpointGetStories = "/stories?size=25";
+  static const endpointGetStories = "/stories?";
   static const endpointGetDetail= "/stories/";
 
 
@@ -104,10 +104,12 @@ class RemoteDataSourceImpl implements RemoteDataSource{
   }
 
   @override
-  Future<List<StoryModel>> getStoryList(String token) async {
+  Future<List<StoryModel>> getStoryList(
+      String token, String page, String sizeItems
+      ) async {
     try {
       final storyListResponse = await dio.get(
-          baseUrl+endpointGetStories,
+          "$baseUrl${endpointGetStories}size=$sizeItems&page=$page",
           options: Options(
               headers: {
                 "Authorization" : "Bearer $token"

@@ -31,11 +31,17 @@ class RepositoryImpl extends Repository{
   }
 
   @override
-  Future<Either<Failure, List<StoryEntity>>> getStoryList(String token) async {
+  Future<Either<Failure, List<StoryEntity>>> getStoryList(
+      String token, String page, String sizeItems
+      ) async {
     try {
-      final listStoryModel = await remoteDataSource.getStoryList(token);
+      final listStoryModel = await remoteDataSource.getStoryList(token, page, sizeItems);
       final storyDetailEntity = listStoryModel.map(
-              (storyModel) => storyModel.modelToEntity()
+              (storyModel) {
+                print(storyModel.modelToEntity().id);
+                print(storyModel.modelToEntity().photoUrl);
+                return storyModel.modelToEntity();
+              }
       ).toList();
       return Right(storyDetailEntity);
     } on ServerException catch(e){

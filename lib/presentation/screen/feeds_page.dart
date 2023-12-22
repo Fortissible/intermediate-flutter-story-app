@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/entity/login_entity.dart';
@@ -7,8 +8,8 @@ import '../provider/story_provider.dart';
 
 class FeedsPage extends StatefulWidget{
   final Function(String) onSelectedStory;
-  final Function(bool) isUploadStorySelected;
-  final Function(bool) isProfileSelected;
+  final Function() isUploadStorySelected;
+  final Function() isProfileSelected;
   final LoginEntity userLoginEntity;
 
   const FeedsPage({
@@ -24,11 +25,22 @@ class FeedsPage extends StatefulWidget{
 }
 
 class _FeedsPageState extends State<FeedsPage> {
+  final ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _fetchListStory();
+
+    scrollController.addListener(() {
+      if (scrollController.position.pixels
+          >= scrollController.position.maxScrollExtent
+        && context.read<StoryProvider>().page != null
+      ){
+        _fetchListStory();
+      }
+    });
+
+    Future.microtask(() async => _fetchListStory());
   }
 
   @override
@@ -54,7 +66,7 @@ class _FeedsPageState extends State<FeedsPage> {
                   Icons.person,
                   color: Colors.black),
               onPressed: () {
-                widget.isProfileSelected(true);
+                widget.isProfileSelected();
               },
             ),
           ),
@@ -62,7 +74,7 @@ class _FeedsPageState extends State<FeedsPage> {
         actions: [
           GestureDetector(
             onTap: (){
-              widget.isUploadStorySelected(true);
+              widget.isUploadStorySelected();
             },
             child: Padding(
                 padding: const EdgeInsets.only(right:16),
@@ -114,14 +126,42 @@ class _FeedsPageState extends State<FeedsPage> {
               ),
             );
           } else if (provider.listStoryState == ListStoryState.hasData) {
+            final currentStoriesLength = provider.listStoryEntity?.length?? 0;
             return RefreshIndicator(
                 onRefresh: () async {
-                  _fetchListStory();
+                  _refreshListStory();
                 },
                 child: ListView.builder(
+                    controller: scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: provider.listStoryEntity?.length ?? 0,
+                    itemCount: currentStoriesLength + (provider.page != null ? 1 : 0),
                     itemBuilder: (ctx, idx){
+                      if (idx == currentStoriesLength && provider.page != null){
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(
+                                  color: Color(0xFFF44F2B),
+                                ),
+                                const SizedBox(width: 8,),
+                                Text(
+                                    "Mohon tunggu...",
+                                    textAlign: TextAlign.start,
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        color: const Color(0xFFF44F2B),
+                                        fontWeight: FontWeight.normal
+                                    )
+                                ),
+                              ],
+                            )
+                          ),
+                        );
+                      }
                       return GestureDetector(
                         onTap: (){
                           widget.onSelectedStory(provider.listStoryEntity![idx].id);
@@ -130,8 +170,8 @@ class _FeedsPageState extends State<FeedsPage> {
                           color: Colors.grey,
                           child: Column(
                             children: [
-                              Image.network(provider.listStoryEntity![idx].photoUrl),
-                              Text(provider.listStoryEntity![idx].name)
+                              Image.network(provider.listStoryEntity?[idx].photoUrl??""),
+                              Text(provider.listStoryEntity?[idx].name??"")
                             ],
                           ),
                         ),
@@ -157,10 +197,19 @@ class _FeedsPageState extends State<FeedsPage> {
             );
           } else {
             return const Center(
-              child: Text(
-                "Error...",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.deepOrangeAccent),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Please wait...",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.deepOrangeAccent),
+                  ),
+                  CircularProgressIndicator(
+                      color: Colors.deepOrangeAccent
+                  )
+                ],
               ),
             );
           }
@@ -169,8 +218,21 @@ class _FeedsPageState extends State<FeedsPage> {
     );
   }
 
-  void _fetchListStory(){
+  Future _fetchListStory() async {
     final storyProvider = context.read<StoryProvider>();
-    storyProvider.getListStory(widget.userLoginEntity.token);
+    await storyProvider.getListStory(widget.userLoginEntity.token
+    );
+  }
+
+  Future _refreshListStory() async {
+    final storyProvider = context.read<StoryProvider>();
+    await storyProvider.refreshListStory(widget.userLoginEntity.token
+    );
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
   }
 }

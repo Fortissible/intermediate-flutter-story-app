@@ -3,10 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/auth_provider.dart';
+import '../provider/story_provider.dart';
 
 class AuthPage extends StatefulWidget {
-  final Function(bool) isLoggedIn;
-  final Function(bool) isRegisterClicked;
+  final Function() isLoggedIn;
+  final Function() isRegisterClicked;
 
   const AuthPage({
     super.key,
@@ -27,156 +28,159 @@ class _AuthPageState extends State<AuthPage> {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Center(
-                child: Text(
-                  "Simple Story App",
-                  style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                      color: Colors.black
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 8
-                ),
-                child: Text(
-                    "Email",
-                    textAlign: TextAlign.start,
+          padding: const EdgeInsets.only(
+              left: 32,
+              right: 32,
+              top: 128
+          ),
+          child: ListView(
+              children: [
+                Center(
+                  child: Text(
+                    "Simple Story App",
                     style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold
-                    )
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter your email...',
-                  ),
-                  onChanged: (inputEmail){
-                    setState(() {
-                      _email = inputEmail;
-                    });
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 8
-                ),
-                child: Text(
-                    "Password",
-                    textAlign: TextAlign.start,
-                    style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold
-                    )
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter your password...',
-                  ),
-                  onChanged: (inputPassword){
-                    setState(() {
-                      _password = inputPassword;
-                    });
-                  },
-                ),
-              ),
-              context.watch<AuthProvider>().loginLoading ?
-              const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Please wait...",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.deepOrangeAccent),
-                    ),
-                    CircularProgressIndicator(
-                        color: Colors.deepOrangeAccent
-                    )
-                  ],
-                ),
-              ) : Padding(
-                padding: const EdgeInsets.only(
-                    top: 8
-                ),
-                child: Container(
-                  height: 44.0,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(
-                          Radius.circular(100)
-                      ),
-                      gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFFF44F2B), Color(0xFFFF9D88)])
-                  ),
-                  child: TextButton(
-                    onPressed: (){
-                      _loginUser();
-                    },
-                    child: Text(
-                      'Login',
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.white
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Doesn't have account?",
-                    style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
                         color: Colors.black
                     ),
                   ),
-                  GestureDetector(
-                    onTap: (){
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 8
+                  ),
+                  child: Text(
+                      "Email",
+                      textAlign: TextAlign.start,
+                      style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold
+                      )
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Enter your email...',
+                    ),
+                    onChanged: (inputEmail){
                       setState(() {
-                        widget.isRegisterClicked(true);
+                        _email = inputEmail;
                       });
                     },
-                    child: Text(
-                      " Register Now",
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 8
+                  ),
+                  child: Text(
+                      "Password",
+                      textAlign: TextAlign.start,
                       style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold
+                      )
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Enter your password...',
+                    ),
+                    onChanged: (inputPassword){
+                      setState(() {
+                        _password = inputPassword;
+                      });
+                    },
+                    obscureText: true,
+                  ),
+                ),
+                context.watch<AuthProvider>().loginLoading ?
+                const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Please wait...",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.deepOrangeAccent),
+                      ),
+                      CircularProgressIndicator(
+                          color: Colors.deepOrangeAccent
+                      )
+                    ],
+                  ),
+                ) : Padding(
+                  padding: const EdgeInsets.only(
+                      top: 8
+                  ),
+                  child: Container(
+                    height: 44.0,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                            Radius.circular(100)
+                        ),
+                        gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFFF44F2B), Color(0xFFFF9D88)])
+                    ),
+                    child: TextButton(
+                      onPressed: (){
+                        _loginUser();
+                      },
+                      child: Text(
+                        'Login',
+                        style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Doesn't have account?",
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w500,
                           fontSize: 16,
                           color: Colors.black
                       ),
                     ),
-                  )
-                ],
-              )
-            ],
+                    GestureDetector(
+                      onTap: (){
+                        setState(() {
+                          widget.isRegisterClicked();
+                        });
+                      },
+                      child: Text(
+                        " Register Now",
+                        style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.black
+                        ),
+                      ),
+                    )
+                  ],
+                )
+              ]
           ),
         )
       ),
@@ -216,9 +220,10 @@ class _AuthPageState extends State<AuthPage> {
       scaffoldMessengerState.showSnackBar(
         SnackBar(content: Text("Welcome ${authProvider.loginEntity?.name}!")),
       ),
-      widget.isLoggedIn(true)
+      widget.isLoggedIn()
     } : scaffoldMessengerState.showSnackBar(
       SnackBar(content: Text(authProvider.errorMsg ?? "Login Failed")),
     );
+
   }
 }

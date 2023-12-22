@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intermediate_flutter_story_app/core/utils/converter.dart';
-import 'package:intermediate_flutter_story_app/domain/entity/story_detail_entity.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/story_provider.dart';
@@ -21,13 +19,6 @@ class DetailPage extends StatefulWidget{
 }
 
 class _DetailPageState extends State<DetailPage> {
-
-  @override
-  void initState() {
-    super.initState();
-    final storyProvider = context.read<StoryProvider>();
-    storyProvider.getStoryDetail(widget.token, widget.storyId);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +46,7 @@ class _DetailPageState extends State<DetailPage> {
               );
             } else if (provider.storyDetailState == StoryDetailState.hasData){
               return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -111,10 +102,19 @@ class _DetailPageState extends State<DetailPage> {
                 style: const TextStyle(color: Colors.deepOrangeAccent),
               );
             } else {
-              return const Text(
-                "Error...",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.deepOrangeAccent),
+              return const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Please wait...",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.deepOrangeAccent),
+                  ),
+                  CircularProgressIndicator(
+                      color: Colors.deepOrangeAccent
+                  )
+                ],
               );
             }
           },

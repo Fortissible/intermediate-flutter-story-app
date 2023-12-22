@@ -1,10 +1,14 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:intermediate_flutter_story_app/core/sharedpreferences/user_shared_preferences.dart';
+import 'package:intermediate_flutter_story_app/presentation/screen/camera_page.dart';
 import 'package:intermediate_flutter_story_app/presentation/screen/profile_page.dart';
 import 'package:intermediate_flutter_story_app/presentation/screen/register_page.dart';
 import 'package:intermediate_flutter_story_app/presentation/screen/upload_story_page.dart';
+import 'package:provider/provider.dart';
 
 import '../../domain/entity/login_entity.dart';
+import '../../presentation/provider/story_provider.dart';
 import '../../presentation/screen/auth_page.dart';
 import '../../presentation/screen/detail_page.dart';
 import '../../presentation/screen/feeds_page.dart';
@@ -18,7 +22,7 @@ class MyRouterDelegate extends RouterDelegate with
   bool isRegisteredSelected = false;
   bool isUploadStorySelected = false;
   bool isProfileSelected = false;
-  LoginEntity? userLoginEntity;
+  bool isCameraSelected = false;
 
   MyRouterDelegate() : _navKey = GlobalKey<NavigatorState>(){
     _init();
@@ -37,12 +41,12 @@ class MyRouterDelegate extends RouterDelegate with
         if (!isLoggedIn)
           MaterialPage(
             child: AuthPage(
-              isLoggedIn: (value){
-                isLoggedIn = value;
+              isLoggedIn: (){
+                isLoggedIn = true;
                 notifyListeners();
               },
-              isRegisterClicked: (value){
-                isRegisteredSelected = value;
+              isRegisterClicked: (){
+                isRegisteredSelected = true;
                 notifyListeners();
               },
             ),
@@ -50,16 +54,20 @@ class MyRouterDelegate extends RouterDelegate with
         if (isLoggedIn)
           MaterialPage(
             child: FeedsPage(
-              onSelectedStory: (value){
-                selectedStory = value;
+              onSelectedStory: (storyId){
+                selectedStory = storyId;
+                final storyProvider = context.read<StoryProvider>();
+                final token = UserSharedPreferences.getUserPrefs().token;
+                storyProvider.getStoryDetail(token,storyId);
                 notifyListeners();
               },
-              isUploadStorySelected: (value) {
-                isUploadStorySelected = value;
+              isUploadStorySelected: () {
+                isUploadStorySelected = true;
+                context.read<StoryProvider>().setPostStoryInitState();
                 notifyListeners();
               },
-              isProfileSelected : (value){
-                isProfileSelected = value;
+              isProfileSelected : (){
+                isProfileSelected = true;
                 notifyListeners();
               },
               userLoginEntity: UserSharedPreferences.getUserPrefs()
@@ -68,22 +76,30 @@ class MyRouterDelegate extends RouterDelegate with
         if (isLoggedIn && isUploadStorySelected)
           MaterialPage(
             child: UploadStoryPage(
-              isBackToFeedsPage: (value) {
-                isUploadStorySelected = !value;
+              isBackToFeedsPage: () {
+                isUploadStorySelected = false;
+                context.read<StoryProvider>().getListStory(
+                    UserSharedPreferences.getUserPrefs().token
+                );
                 notifyListeners();
               },
               userLoginEntity: UserSharedPreferences.getUserPrefs(),
+              goToCameraPage: () {
+                isCameraSelected = true;
+                notifyListeners();
+              },
             )
           ),
         if (isLoggedIn && isProfileSelected)
           MaterialPage(
             child: ProfilePage(
-              isBackToFeedsPage: (value){
-                isProfileSelected = !value;
+              isBackToFeedsPage: (){
+                isProfileSelected = false;
                 notifyListeners();
               },
-              loggingOut: (value){
-                isLoggedIn = !value;
+              loggingOut: (){
+                isLoggedIn = false;
+                isProfileSelected = false;
                 notifyListeners();
               },
               username: UserSharedPreferences.getUserPrefs().name,
@@ -92,18 +108,28 @@ class MyRouterDelegate extends RouterDelegate with
         if (isRegisteredSelected)
           MaterialPage(
             child: RegisterPage(
-                isSuccessfulyRegistered: (value){
-                  isRegisteredSelected = !value;
+                isSuccessfulyRegistered: (){
+                  isRegisteredSelected = false;
                   notifyListeners();
                 }
             ),
           ),
-        if (selectedStory != null)
+        if (isLoggedIn && selectedStory != null)
           MaterialPage(
               child: DetailPage(
                 storyId: selectedStory ?? "",
                 token: UserSharedPreferences.getUserPrefs().token,
               )
+          ),
+        if (isLoggedIn && isCameraSelected)
+          MaterialPage(
+            child: CameraPage(
+              cameras: context.read<StoryProvider>().listCameraDescription!,
+              backToUploadPage: () {
+                isCameraSelected = false;
+                notifyListeners();
+              },
+            )
           )
       ],
       onPopPage: (route, result){
@@ -111,6 +137,12 @@ class MyRouterDelegate extends RouterDelegate with
 
         if (!didPop) {
           return false;
+        }
+
+        if (isCameraSelected){
+          isCameraSelected = !isCameraSelected;
+          notifyListeners();
+          return true;
         }
 
         isRegisteredSelected = false;
@@ -129,7 +161,6 @@ class MyRouterDelegate extends RouterDelegate with
 
   @override
   Future<void> setNewRoutePath(configuration) {
-    // TODO: implement setNewRoutePath
     throw UnimplementedError();
   }
 
