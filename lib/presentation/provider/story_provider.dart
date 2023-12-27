@@ -2,11 +2,12 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:intermediate_flutter_story_app/domain/entity/story_detail_entity.dart';
 import 'package:intermediate_flutter_story_app/domain/repository/repository.dart';
-
 import '../../domain/entity/story_entity.dart';
 
 enum ListStoryState { init, loading, noData, hasData, error }
@@ -132,7 +133,9 @@ class StoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future postStory(String token, String desc, List<int> bytes, String filename) async {
+  Future postStory(
+      String token, String desc, List<int> bytes, String filename, LatLng? latLng
+      ) async {
     _uploadStoryState = UploadStoryState.loading;
     notifyListeners();
 
@@ -141,7 +144,11 @@ class StoryProvider extends ChangeNotifier {
 
     final bytes = await imageFile!.readAsBytes();
     final bytesList = bytes.toList();
-    final responseFold = await repository.postStory(token, desc, bytesList, filename);
+    final responseFold = await repository.postStory(
+        token, desc, bytesList, filename,
+        latLng?.latitude,
+        latLng?.longitude
+    );
     responseFold.fold(
             (l) {
               _errorMsg = l.msg;
@@ -176,5 +183,34 @@ class StoryProvider extends ChangeNotifier {
     } while (length > 1000000);
 
     return newByte;
+  }
+
+  Future<bool> askLocationPermission() async {
+
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return false;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return false;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return false;
+    }
+
+    return true;
   }
 }

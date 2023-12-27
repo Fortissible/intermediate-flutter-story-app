@@ -21,6 +21,8 @@ abstract class RemoteDataSource{
       String desc,
       List<int> bytes,
       String fileName,
+      double? lat,
+      double? lon
       );
 }
 
@@ -174,11 +176,15 @@ class RemoteDataSourceImpl implements RemoteDataSource{
       String desc,
       List<int> bytes,
       String fileName,
+      double? lat,
+      double? lon
       ) async {
     try {
       var formData = FormData.fromMap({
         'photo': MultipartFile.fromBytes(bytes, filename: fileName),
-        'description' : desc
+        'description' : desc,
+        'lat': lat,
+        'lon': lon
       });
 
       final postStoryResponse = await dio.post(

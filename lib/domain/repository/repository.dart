@@ -15,5 +15,7 @@ abstract class Repository{
         String desc,
         List<int> bytes,
         String fileName,
+        double? lat,
+        double? lon
       );
 }

@@ -3,9 +3,13 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intermediate_flutter_story_app/domain/entity/login_entity.dart';
 import 'package:intermediate_flutter_story_app/presentation/provider/story_provider.dart';
+import 'package:intermediate_flutter_story_app/presentation/widget/event_snackbar.dart';
 import 'package:provider/provider.dart';
 
 class UploadStoryPage extends StatefulWidget{
@@ -25,6 +29,12 @@ class UploadStoryPage extends StatefulWidget{
 
 class _UploadStoryPageState extends State<UploadStoryPage> {
   String? _desc;
+  bool? _isLocation = false;
+  bool _isCustomLocation = false;
+  final LatLng _indonesiaLocation = const LatLng(-7.4294398,109.8589577);
+  late GoogleMapController mapController;
+  LatLng? _customStoryLocation;
+  late final Set<Marker> markers = {};
 
   @override
   void initState() {
@@ -60,8 +70,31 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
       ),
       body: SafeArea(
         child: ListView(
-            padding: const EdgeInsets.only(top:64),
             children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height*0.35,
+                child: Center(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition (
+                        target: _indonesiaLocation,
+                        zoom: 6
+                    ),
+                    onMapCreated: (controller) {
+                      setState(() {
+                        mapController = controller;
+                      });
+                    },
+                    onLongPress: (LatLng latLng) {
+                      setState(() {
+                        _isCustomLocation = true;
+                      });
+                      onSetMarker(latLng, _isCustomLocation);
+                    },
+                    markers: markers,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16,),
               SizedBox(
                 child: context.watch<StoryProvider>().imagePath == null
                     ? const Align(
@@ -118,6 +151,70 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
                     keyboardType: TextInputType.multiline,
                   ),
                 ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Use your current location : ",
+                    style: TextStyle(
+                        color: Colors.deepOrangeAccent
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Checkbox(
+                      value: _isLocation,
+                      onChanged: (value){
+                        setState(() {
+                          markers.clear();
+                          _isLocation = value;
+                          _isCustomLocation = false;
+                        });
+                        if (value==null || value==false){
+                          setState(() {
+                            markers.clear();
+                          });
+                          _showSnackbar("GPS Location Unselected!");
+                        } else {
+                          Future.microtask(
+                                  () async {
+                                final locationPermission = await context.read<StoryProvider>().askLocationPermission();
+                                if (!locationPermission){
+                                  setState(() {
+                                    _isLocation = false;
+                                  });
+                                } else {
+                                  _showSnackbar("Location selected based on GPS");
+
+                                  Position? userCurrentLocation;
+                                  userCurrentLocation = await _determinePosition();
+
+                                  setState(() {
+                                    _customStoryLocation = userCurrentLocation != null
+                                        ? LatLng(
+                                        userCurrentLocation.latitude,
+                                        userCurrentLocation.longitude
+                                    )
+                                        : null;
+                                  });
+
+                                  _customStoryLocation != null
+                                      ? onSetMarker(
+                                      LatLng(
+                                          userCurrentLocation.latitude,
+                                          userCurrentLocation.longitude
+                                      ),
+                                      _isCustomLocation
+                                  )
+                                      : null;
+                                }
+                              }
+                          );
+                        }
+                      }
+                  ),
+                ],
               ),
               Consumer<StoryProvider>(
                 builder: (ctx, provider, _){
@@ -238,7 +335,8 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
                     );
                   }
                 },
-              )
+              ),
+              const SizedBox(height: 16,),
             ]
         )
       ),
@@ -254,7 +352,6 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
       scaffoldMessengerState.showSnackBar(
         const SnackBar(content: Text("Please insert your story pics and fill the description!")),
       );
-
       return;
     }
     final fileName = imageFile.name;
@@ -265,10 +362,16 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
       _desc!,
       newBytes,
       fileName,
+      markers.isEmpty
+        ? null
+        : LatLng(
+            markers.first.position.latitude,
+            markers.first.position.longitude
+        )
     );
   }
 
-  Future _showSnackbar(String? msg) async {
+  void _showSnackbar(String? msg) async {
     final ScaffoldMessengerState scaffoldMessengerState =
     ScaffoldMessenger.of(context);
     scaffoldMessengerState.showSnackBar(
@@ -346,5 +449,41 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
         ),
       )
     );
+  }
+
+  void onSetMarker(LatLng latLng, bool isCustomLocation) async {
+    final info = await placemarkFromCoordinates(
+        latLng.latitude,
+        latLng.longitude
+    );
+    final place = info[0];
+    final street = place.street ?? "Di suatu lokasi";
+    final address =
+        '${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
+
+    final marker = Marker(
+      markerId: const MarkerId("source"),
+      position: latLng,
+      infoWindow: InfoWindow(
+        title: "Story Location: $street",
+        snippet: address
+      )
+    );
+
+    setState(() {
+      markers.clear();
+      markers.add(marker);
+      isCustomLocation
+        ? _isLocation = false
+        : null;
+    });
+
+    mapController.animateCamera(
+      CameraUpdate.newLatLngZoom(latLng, 13),
+    );
+  }
+
+  Future<Position> _determinePosition() async {
+    return await Geolocator.getCurrentPosition();
   }
 }

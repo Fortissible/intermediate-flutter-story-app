@@ -66,10 +66,11 @@ class RepositoryImpl extends Repository{
 
   @override
   Future<Either<Failure, String>> postStory(
-      String token, String desc, List<int> bytes, String fileName) async {
+      String token, String desc, List<int> bytes, String fileName,
+      double? lat, double? lon) async {
     try {
       final storyResponse = await remoteDataSource.postStory(
-          token, desc, bytes, fileName
+          token, desc, bytes, fileName, lat, lon
       );
       return Right(storyResponse);
     } on ServerException catch(e){
