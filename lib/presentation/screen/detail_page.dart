@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intermediate_flutter_story_app/core/utils/converter.dart';
-import 'package:intermediate_flutter_story_app/presentation/widget/event_snackbar.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/story_provider.dart';
@@ -24,7 +23,7 @@ class DetailPage extends StatefulWidget{
 class _DetailPageState extends State<DetailPage> {
   final LatLng _indonesiaLocation = const LatLng(-2.44565, 117.8888);
   late GoogleMapController mapController;
-  late final Set<Marker> markers = {};
+  late Set<Marker> markers = {};
 
   @override
   Widget build(BuildContext context) {
@@ -36,88 +35,82 @@ class _DetailPageState extends State<DetailPage> {
         builder: (ctx, provider, _){
           if (provider.storyDetailState == StoryDetailState.loading){
             return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Please wait...",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.deepOrangeAccent),
-                  ),
-                  CircularProgressIndicator(
-                      color: Colors.deepOrangeAccent
-                  )
-                ],
-              )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Please wait...",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.deepOrangeAccent),
+                    ),
+                    CircularProgressIndicator(
+                        color: Colors.deepOrangeAccent
+                    )
+                  ],
+                )
             );
           }
           else if (provider.storyDetailState == StoryDetailState.hasData){
             return ListView(
                 children: [
-                  SizedBox(
+                  provider.storyDetailEntity?.lat != null
+                  ? SizedBox(
                       height: MediaQuery.of(context).size.height*0.35,
                       child: Stack(
                         children: [
                           Center(
                             child: GoogleMap(
-                              initialCameraPosition: provider.storyDetailEntity?.lat == null
-                                ? CameraPosition (
+                              initialCameraPosition: CameraPosition (
                                   target: _indonesiaLocation,
                                   zoom: 4
-                                )
-                                : CameraPosition (
-                                  target: LatLng (
-                                      provider.storyDetailEntity!.lat ?? 0,
-                                      provider.storyDetailEntity!.lon ?? 0
-                                  ),
-                                  zoom: 16
-                                ),
+                              ),
                               markers: markers,
                               onMapCreated: (controller) {
                                 setState(() {
                                   mapController = controller;
                                 });
                                 provider.storyDetailEntity?.lat != null
-                                ? _setStoryMarker(
-                                  LatLng(
-                                    provider.storyDetailEntity!.lat ?? 0,
-                                    provider.storyDetailEntity!.lon ?? 0
-                                  )
-                                )
-                                : null;
+                                    ? _setStoryMarker(
+                                        LatLng(
+                                            provider.storyDetailEntity!.lat ?? 0,
+                                            provider.storyDetailEntity!.lon ?? 0
+                                        )
+                                    )
+                                    : null;
                               },
                             ),
                           ),
-                          provider.storyDetailEntity?.lat == null
-                            ? Align (
-                                alignment: Alignment.bottomCenter,
-                                child: Padding (
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(4)
-                                        ),
-                                        color: Color(0x99F44F2B)
+                          markers.isEmpty
+                              ? Align (
+                            alignment: Alignment.bottomCenter,
+                            child: Padding (
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(4)
                                     ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(4),
-                                      child: Text(
-                                        "This story doesn't have location",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500
-                                        ),
-                                      ),
+                                    color: Color(0x99F44F2B)
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Text(
+                                    "This story doesn't have location",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500
                                     ),
                                   ),
                                 ),
-                              )
+                              ),
+                            ),
+                          )
                               : const SizedBox()
                         ],
                       )
-                  ),
+                  )
+                  : const SizedBox(),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Container(
@@ -135,13 +128,11 @@ class _DetailPageState extends State<DetailPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                height: 300,
-                                width: 150,
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(100)
                                 ),
                                 child: FittedBox(
-                                  fit: BoxFit.fitHeight,
+                                  fit: BoxFit.fill,
                                   child: Image.network(provider.storyDetailEntity?.photoUrl ?? ""),
                                 ),
                               ),
@@ -219,6 +210,7 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   void _setStoryMarker(LatLng latLng) async {
+
     final info = await placemarkFromCoordinates(
         latLng.latitude,
         latLng.longitude
@@ -226,45 +218,34 @@ class _DetailPageState extends State<DetailPage> {
     final place = info[0];
     final street = place.street ?? "Di suatu lokasi";
     final address =
-        '${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
+        '${place.subLocality}, ${place.country}';
 
-    markers.add(
-        Marker(
+    setState(() {
+      markers.clear();
+      markers.add(
+          Marker(
             markerId: const MarkerId("source"),
             position: LatLng (
                 latLng.latitude,
                 latLng.longitude
             ),
             infoWindow: InfoWindow(
-                title: street,
-                snippet: address
+              title: street,
+              snippet: address
             )
-          // onTap: () {
-          //   _showSnackbar(
-          //     LatLng(
-          //         provider.storyDetailEntity!.lat ?? 0,
-          //         provider.storyDetailEntity!.lon ?? 0
-          //     )
-          //   );
-          // }
-        )
-    );
+          )
+      );
+      mapController.animateCamera(
+        CameraUpdate.newLatLngZoom(
+            latLng, 13
+        ),
+      );
+    });
   }
 
-  void _showSnackbar(LatLng latlng) async {
-
-    final info =
-    await placemarkFromCoordinates(
-        latlng.latitude,
-        latlng.longitude
-    );
-    final place = info[0];
-    final address =
-        '${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
-
-    EventSnackBar(
-        context: context,
-        content: address
-    ).showSaveFilterSnackBar();
+  @override
+  void dispose() {
+    mapController.dispose();
+    super.dispose();
   }
 }

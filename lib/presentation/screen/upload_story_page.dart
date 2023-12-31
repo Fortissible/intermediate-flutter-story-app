@@ -9,7 +9,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intermediate_flutter_story_app/domain/entity/login_entity.dart';
 import 'package:intermediate_flutter_story_app/presentation/provider/story_provider.dart';
-import 'package:intermediate_flutter_story_app/presentation/widget/event_snackbar.dart';
 import 'package:provider/provider.dart';
 
 class UploadStoryPage extends StatefulWidget{
@@ -269,7 +268,14 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
                       ),
                     );
                   } else if (provider.uploadStoryState == UploadStoryState.hasData){
-                    WidgetsBinding.instance.addPostFrameCallback((_) => _showSnackbar("Sukses upload story"));
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _showSnackbar("Sukses upload story");
+                      context.read<StoryProvider>().clearPreviousStory();
+                      context.read<StoryProvider>().refreshListStory(
+                          widget.userLoginEntity.token
+                      );
+                      widget.isBackToFeedsPage();
+                    });
                     return Padding(
                       padding: const EdgeInsets.only(
                           top: 8,left:32,right:32
@@ -485,5 +491,11 @@ class _UploadStoryPageState extends State<UploadStoryPage> {
 
   Future<Position> _determinePosition() async {
     return await Geolocator.getCurrentPosition();
+  }
+
+  @override
+  void dispose() {
+    mapController.dispose();
+    super.dispose();
   }
 }

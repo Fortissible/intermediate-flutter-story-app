@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/auth_provider.dart';
-import '../provider/story_provider.dart';
 
 class AuthPage extends StatefulWidget {
   final Function() isLoggedIn;

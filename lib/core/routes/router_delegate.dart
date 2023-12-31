@@ -1,4 +1,3 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:intermediate_flutter_story_app/core/sharedpreferences/user_shared_preferences.dart';
 import 'package:intermediate_flutter_story_app/presentation/screen/camera_page.dart';
@@ -7,7 +6,6 @@ import 'package:intermediate_flutter_story_app/presentation/screen/register_page
 import 'package:intermediate_flutter_story_app/presentation/screen/upload_story_page.dart';
 import 'package:provider/provider.dart';
 
-import '../../domain/entity/login_entity.dart';
 import '../../presentation/provider/story_provider.dart';
 import '../../presentation/screen/auth_page.dart';
 import '../../presentation/screen/detail_page.dart';

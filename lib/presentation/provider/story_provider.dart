@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_picker/image_picker.dart';
 import 'package:intermediate_flutter_story_app/domain/entity/story_detail_entity.dart';
 import 'package:intermediate_flutter_story_app/domain/repository/repository.dart';
 import '../../domain/entity/story_entity.dart';
@@ -57,6 +56,15 @@ class StoryProvider extends ChangeNotifier {
 
   void setImageFile(XFile? value) {
     imageFile = value;
+    notifyListeners();
+  }
+
+  void clearPreviousStory(){
+    imageFile = null;
+    imagePath = null;
+    _uploadStoryState = UploadStoryState.init;
+    _postResponse = null;
+    _errorMsg = null;
     notifyListeners();
   }
 
@@ -113,6 +121,8 @@ class StoryProvider extends ChangeNotifier {
 
     _errorMsg = null;
     _storyDetailEntity = null;
+
+    _storyDetailState = StoryDetailState.loading;
 
     final storyDetailEntityFold = await repository.getStoryDetail(token, id);
     storyDetailEntityFold.fold(

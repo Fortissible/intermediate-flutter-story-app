@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/entity/login_entity.dart';
-import '../../domain/entity/story_entity.dart';
 import '../provider/story_provider.dart';
 
 class FeedsPage extends StatefulWidget{
